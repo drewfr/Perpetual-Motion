@@ -5,10 +5,10 @@
 
 	##################
 	##### BUTTONS ####
-        ##################
+    ##################
 
         # Quit button
-        Button:
+        DPEAButton:
             text: 'X'
             font_size: 23
             size_hint: None, None
@@ -37,7 +37,7 @@
             color: 0.180, 0.188, 0.980, 1
             text: "Open Gate"
             center_x: root.width * 0.25
-            y: root.height * 0.35
+            y: root.height * 0.55
             background_color: 0, 0, 0, 0
             background_normal: ''
             size_hint: None,None
@@ -48,22 +48,22 @@
         DPEAButton:
             id: ramp
             color: 0.180, 0.188, 0.980, 1
-            text: "Ramp to Top"
-            center_x: root.width * 0.5
+            text: "Ramp DOWN"
+            center_x: root.width * 0.375
             y: root.height * 0.35
             background_color: 0, 0, 0, 0
             background_normal: ''
             size_hint: None,None
             size: 300,100
-            on_press: root.toggleRamp()
+            on_press: root.rampDown()
             on_release: root.resetColors()
 
         DPEAButton:
             id: staircase
             color: 0.180, 0.188, 0.980, 1
-            text: "Staircase On"
+            text: "Staircase On/Off"
             center_x: root.width * 0.75
-            y: root.height * 0.35
+            y: root.height * 0.55
             background_color: 0, 0, 0, 0
             background_normal: ''
             size_hint: None,None
@@ -71,17 +71,39 @@
             on_press: root.toggleStaircase()
             on_release: root.resetColors()
 
+        DPEAButton:
+            id: initialize
+            color: 0.180, 0.188, 0.980, 1
+            text: "Ramp UP"
+            center_x: root.width * 0.625
+            y: root.height * 0.35
+            background_color: 0, 0, 0, 0
+            background_normal: ''
+            size_hint: None,None
+            size: 300,100
+            on_press: root.rampUp()
+            on_release: root.resetColors()
+
+        DPEAButton:
+            text: 'PANIC'
+            font_size: 23
+            size: 100, 100
+            x: root.width * 0.035
+            y: root.height * 0.85
+            background_color: 0.7, 0.7, 0.7, 1
+            on_release: root.PANIC()
+
 	##################
 	##### SLIDERS ####
-        ##################
+    ##################
 
         Slider:
             id: rampSpeed
             orientation: 'horizontal'
-            min: 10
-            max: 200
-            value: root.rampSpeed
-            step: 1
+            min: 40
+            max: 100
+            value: 40
+            step: .5
             center_x: root.width * 0.6
             y: root.height * 0.15
             size_hint_x: 7
@@ -90,19 +112,19 @@
         Slider:
             id: staircaseSpeed
             orientation: 'horizontal'
-            min: 10
-            max: 50
-            value: root.staircaseSpeed
-            step: 1
+            min: 0
+            max: 18000
+            value: 18000
+            step: 1000
             center_x: root.width * 0.6
             y: root.height * 0.05
             size_hint_x: 7
             on_value: root.setStaircaseSpeed(self.value)
 
 
-        ##################
+    ##################
 	##### LABELS #####
-        ##################
+    ##################
 
         Label:
             id: title
@@ -116,7 +138,7 @@
 
         Label:
             id: rampSpeedLabel
-            text: 'Ramp Speed: ' + str(root.rampSpeed)
+            text: 'Ramp Speed: ' + str(rampSpeed.value)
             font_size: 40
             center_x: root.width * 0.22
             y: root.height * 0.15
@@ -124,7 +146,7 @@
 
         Label:
             id: staircaseSpeedLabel
-            text: 'Staircase Speed: ' + str(root.staircaseSpeed)
+            text: 'Staircase Speed: ' + str(staircaseSpeed.value)
             font_size: 40
             center_x: root.width * 0.20
             y: root.height * 0.05
@@ -138,3 +160,11 @@
             y: root.height * 0.02
             color: 0.8, 0.8, 0.8, 1
 
+        Label:
+            id: ball_ready
+            font_size: 30
+            color: 0.8, 0.8, 0.8, 1
+            bold: True
+            center_x: root.width * 0.2
+            y: root.height * 0.75
+            color: 0.9, 0.9, 0.9, 1
