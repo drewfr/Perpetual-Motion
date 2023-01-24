@@ -69,30 +69,15 @@ cyprus.open_spi()
 # ////////////////////////////////////////////////////////////////
 sm = ScreenManager()
 ramp = stepper(port=0, micro_steps=32, hold_current=20, run_current=20, accel_current=20, deaccel_current=20,
-               steps_per_unit=200, speed=2)
+               steps_per_unit=200, speed=4)
 
-ramp.set_max_speed(4)
+ramp.set_max_speed(6)
 
 
 # ////////////////////////////////////////////////////////////////
 # //                       MAIN FUNCTIONS                       //
 # //             SHOULD INTERACT DIRECTLY WITH HARDWARE         //
 # ////////////////////////////////////////////////////////////////
-class Functions:
-
-    def panic(self):
-        """Does everything the same as the quit function but more aggressively."""
-
-        ramp.softStop()
-        cyprus.set_servo_position(2, self.servo_closed)
-        sleep(.1)
-        cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
-        cyprus.close()
-        GPIO.cleanup()
-        print("PANIC!")
-        MyApp().stop()
-
-
 # ////////////////////////////////////////////////////////////////
 # //        DEFINE MAINSCREEN CLASS THAT KIVY RECOGNIZES        //
 # //                                                            //
@@ -103,11 +88,7 @@ class Functions:
 # //      SHOULD NOT INTERACT DIRECTLY WITH THE HARDWARE        //
 # ////////////////////////////////////////////////////////////////
 
-
-"""Global variables area"""
-
-
-class MainScreen(Screen, Functions):
+class MainScreen(Screen):
     version = cyprus.read_firmware_version()
     staircaseSpeedText = '0'
     staircaseSpeed = 40
@@ -132,23 +113,22 @@ class MainScreen(Screen, Functions):
         cyprus.set_servo_position(2, self.servo_closed)
         cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
 
-
     def variables(self, dt):
 
-        """Creating variables with only one clock function. This should take less processing power than running
-        a million clocks"""
+        """giving real time feedback through a singular clock object that prints to the station and informs the user
+        where the ball currently lies"""
 
-        if cyprus.read_gpio() & 0b0010:  # binary bitwise AND of the value returned from read.gpio()
+        if cyprus.read_gpio() & 0b0010:  # sensor returns this if there is nothing at the bottom of the ramp
             self.ramp_sens_lower_state = 0
             print("lower_state " + str(self.ramp_sens_lower_state))
 
-            self.ids.ball_ready.text = "Ball is not at bottom of ramp"
+            self.ids.ball_ready.text = "Ball is not at bottom of ramp"  # updates label
 
         else:
             self.ramp_sens_lower_state = 1
             print("lower_state " + str(self.ramp_sens_lower_state))
 
-            self.ids.ball_ready.text = "Ready to start!"
+            self.ids.ball_ready.text = "Ready to start!"  # updates label
 
         if cyprus.read_gpio() & 0b0001:
             self.ramp_sens_upper_state = 0
@@ -183,76 +163,9 @@ class MainScreen(Screen, Functions):
             cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
             self.stair_state = 0
 
-    def rampDown(self):
-
-        """Function to toggle the ramp. Only works if the ball is at the lower sensor and the state is 1"""
-
-        if self.ramp_sens_lower_state == 1:
-            print("Don't press Ramp DOWN when the ball is here!")
-
-        else:
-            ramp.start_relative_move(-28.5)
-            print("ramp is going down!")
-
-    def auto(self):
-
-        """Goes through the machine automatically. Will only work if the ball and ramp are at the lower position"""
-
-        print(ramp.get_position_in_units())
-        print("Run through one cycle of the perpetual motion machine")
-
-        if self.ramp_sens_lower_state == 1:
-
-            ramp.set_speed(2)
-            cyprus.set_servo_position(2, self.servo_closed)
-            sleep(.1)
-            ramp.start_relative_move(28.5)
-
-            sleep(16)
-
-            sleep(.1)
-            ramp.softStop()
-            ramp.goHome()
-
-            cyprus.set_pwm_values(1, period_value=100000, compare_value=self.ids.staircaseSpeed.value,
-                                  compare_mode=cyprus.LESS_THAN_OR_EQUAL)
-            sleep(15)
-            cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
-
-            cyprus.set_servo_position(2, self.servo_open)
-            sleep(2)
-            cyprus.set_servo_position(2, self.servo_closed)
-
-        else:
-
-            print("please move ball to bottom of ramp to start")
-
-    def setRampSpeed(self, speed):
-
-        """Sets the ramp speed. The speed variable in the function definition is not used as it wasn't necessary
-        but was included in the example."""
-
-        if not ramp.is_busy():
-            ramp.set_speed(self.ids.rampSpeed.value * .02)
-            ramp_check = self.ids.rampSpeed.value * .02
-            print("ramp speed is " + str(ramp_check))
-
-        else:
-
-            print("ramp is busy, leave it be!")
-
-    def setStaircaseSpeed(self, speed):
-
-        """Updates the staircase speed only if it is on."""
-
-        if self.stair_state == 1:
-            cyprus.set_pwm_values(1, period_value=100000, compare_value=self.ids.staircaseSpeed.value,
-                                  compare_mode=cyprus.LESS_THAN_OR_EQUAL)
-
     def rampUp(self):
 
-        """Tells the ramp to go home. This doesn't usually work as the ramp needs to be at home when turning it on
-        and if it is not at home when the program is initialized then it will not go home and needs to be reset"""
+        """Tells ramp to move a full length upwards... not good for the machine if it starts at the top!!"""
 
         if self.ramp_sens_upper_state == 1:
             print("Don't press Ramp UP when the ball is here!")
@@ -263,6 +176,70 @@ class MainScreen(Screen, Functions):
             ramp.start_relative_move(28.5)
             print("ramp is going up!")
 
+    def rampDown(self):
+
+        """Tells ramp to move a full length downwards... not good for the machine if it starts at the bottom!!"""
+
+        if self.ramp_sens_lower_state == 1:
+            print("Don't press Ramp DOWN when the ball is here!")
+
+        else:
+            ramp.start_relative_move(-28.5)
+            print("ramp is going down!")
+
+    def auto(self):
+
+        """Goes through one cycle of the machine. Will only work if the ball and ramp are at the lower position"""
+
+        print("Run through one cycle of the perpetual motion machine")
+
+        ramp.set_as_home()
+
+        if self.ramp_sens_lower_state == 1:
+
+            ramp.set_speed(2)
+            cyprus.set_servo_position(2, self.servo_closed)
+            sleep(.5)
+            ramp.start_relative_move(28.5)
+
+            sleep(14)
+
+            ramp.softStop()
+            ramp.goHome()
+
+            cyprus.set_pwm_values(1, period_value=100000, compare_value=self.ids.staircaseSpeed.value,
+                                  compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+            sleep(15)
+            cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+
+            cyprus.set_servo_position(2, self.servo_open)
+            sleep(1)
+            cyprus.set_servo_position(2, self.servo_closed)
+
+        else:
+
+            print("move ball to bottom of ramp to start")
+
+    def setRampSpeed(self, speed):
+
+        """Sets the ramp speed"""
+
+        if not ramp.is_busy():
+            ramp.set_speed(self.ids.rampSpeed.value * .02)
+            ramp_check = self.ids.rampSpeed.value * .02
+            print("ramp speed is " + str(ramp_check))
+
+        else:
+
+            print("wait for ramp to finish!")
+
+    def setStaircaseSpeed(self, speed):
+
+        """Updates the staircase speed only if it is on."""
+
+        if self.stair_state == 1:
+            cyprus.set_pwm_values(1, period_value=100000, compare_value=self.ids.staircaseSpeed.value,
+                                  compare_mode=cyprus.LESS_THAN_OR_EQUAL)
 
     def resetColors(self):
         self.ids.gate.color = YELLOW
@@ -272,8 +249,7 @@ class MainScreen(Screen, Functions):
 
     def quit(self):
 
-        """Quit function. This is supposed to put all the components back to their "natural state" but half the time
-        it doesn't actually work and the servo does what it wants."""
+        """Quit function. Servo motor often has a mind of its own :("""
 
         ramp.free_all()
         sleep(.5)
@@ -285,12 +261,6 @@ class MainScreen(Screen, Functions):
         GPIO.cleanup()
         print("Exit")
         MyApp().stop()
-
-    def PANIC(self):
-
-        """Calls the panic function"""
-
-        self.panic()
 
 
 sm.add_widget(MainScreen(name='main'))

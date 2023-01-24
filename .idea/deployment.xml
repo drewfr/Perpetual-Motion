@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="WiredRaspberrypi@172.17.21.2:22 (6)" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="WiredRaspberrypi@172.17.21.2:22 (8)" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="WiredRaspberrypi@172.17.21.2:22 (4)">
         <serverdata>
@@ -20,6 +20,20 @@
         <serverdata>
           <mappings>
             <mapping deploy="/tmp/pycharm_project_460" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="WiredRaspberrypi@172.17.21.2:22 (7)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_609" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="WiredRaspberrypi@172.17.21.2:22 (8)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_730" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
