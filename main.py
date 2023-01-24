@@ -109,11 +109,11 @@ class MainScreen(Screen):
 
         super(MainScreen, self).__init__(**kwargs)
 
-        Clock.schedule_interval(self.variables, 1)
+        Clock.schedule_interval(self.updates, 1)
         cyprus.set_servo_position(2, self.servo_closed)
         cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
 
-    def variables(self, dt):
+    def updates(self, dt):
 
         """giving real time feedback through a singular clock object that prints to the station and informs the user
         where the ball currently lies"""
